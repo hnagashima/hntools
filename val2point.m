@@ -1,10 +1,14 @@
 function [point, M] = val2point(x,xval)
 % [point, M] = val2point(x,xval)
-% This function searches point: x(point) = xval
+% val2point searches an index (point) which matches: x(point) = xval
+%
+% #Inputs:
 % x: vector
-% xval, value of x (single scaler or vectors)
+% xval: value of x (single scaler or vectors)
+%
+% #Outputs:
 % point: same size of xval
-% M error
+% M: error. M = x(point) - xval.
 point = zeros(size(xval));
 M = zeros(size(xval));
 xval(xval == Inf) = max(x);
