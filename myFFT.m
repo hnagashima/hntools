@@ -5,14 +5,14 @@ function [freq,FT] = myFFT(x,varargin)
 % [____,__] = myFFT(________,dim) % specify dimension
 % 
 % Input:
-% x: time domain vector.
-% y: data (vector or matrix)
-% NFFT: performs NFFT-point fft. (padding with zeros)
-% DIM: applies the fft operation across the dimension DIM.
+% - x: time domain vector.
+% - y: data (vector or matrix)
+% - NFFT: performs NFFT-point fft. (padding with zeros)
+% - DIM: applies the fft operation across the dimension DIM.
 % 
 % Output:
-% f = Fs*(0:(L/2))/L; (Fs; sampling frequency, L number of datas)
-% FT = Fourier transformation data.
+% - f = Fs*(0:(L/2))/L; (Fs; sampling frequency, L number of datas)
+% - FT = Fourier transformation data.
 %
 
 
