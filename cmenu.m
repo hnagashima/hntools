@@ -27,6 +27,10 @@ switch nargin
         event = [];
         option = 'on';
     case 1
+        if strcmp(varargin{1},'default')
+            set(0, 'defaultFigureCreateFcn',@cmenu);
+            return;
+        end
         src = gcf;
         event = [];
         option = varargin{1};
@@ -37,10 +41,7 @@ switch nargin
 end
 
 % option must be on or off.
-if strcmp(option,'default')
-   set(0, 'defaultFigureCreateFcn',@cmenu);
-   return;
-end
+
 if ~ismember(option,{'on','off'}) 
         error('Option is ''on'' or ''off'' ');
 end
