@@ -27,6 +27,10 @@ switch nargin
         event = [];
         option = 'on';
     case 1
+        if strcmp(varargin{1},'default')
+            set(0, 'defaultFigureCreateFcn',@cmenu);
+            return;
+        end
         src = gcf;
         event = [];
         option = varargin{1};
@@ -37,10 +41,7 @@ switch nargin
 end
 
 % option must be on or off.
-if strcmp(option,'default')
-   set(0, 'defaultFigureCreateFcn',@cmenu);
-   return;
-end
+
 if ~ismember(option,{'on','off'}) 
         error('Option is ''on'' or ''off'' ');
 end
@@ -72,19 +73,19 @@ end
 
 
 
-mh = uimenu(fig,'Text' ,'Custom');
+mh = uimenu(fig,LabelName ,'Custom');
 mh.HandleVisibility = 'on'; % undeletable object.
 
 % add save2pdf menu
 save2pdf_menu(src, event, mh);
 
 % add Figure Scale menu
-eh3 = uimenu(mh,'text','FigureScale');
+eh3 = uimenu(mh,LabelName,'FigureScale');
 lists = FigureScale;
 c_eh3{1,size(lists,1)} = [];
 for k = 1:size(lists,1)
-    c_eh3{k} = uimenu(eh3,'text',lists{k,1});
-    c_eh3{k}.MenuSelectedFcn = @setFigureScale;
+    c_eh3{k} = uimenu(eh3,LabelName,lists{k,1});
+    c_eh3{k}.Callback = @setFigureScale;
 end
     function setFigureScale(src,~)
         FigureScale(mh.Parent,src.Text);
@@ -121,4 +122,16 @@ fig.CreateFcn = [];
 % eh2 = uimenu(mh, 'text', 'Export to transparent PDF');
 % fun = @(src,event, varargin) save2pdf_transparent(mh.Parent);
 % eh2.MenuSelectedFcn = fun;
+end
+
+
+function pname = LabelName
+% Return 'text' or 'label' depending on MATLAB version
+V = version('-release');
+if str2double(V(1:4)) < 2018        
+    pname = 'label';
+else
+    pname = 'text';
+end
+
 end
