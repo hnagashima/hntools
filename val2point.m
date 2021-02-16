@@ -9,10 +9,12 @@ function [point, M] = val2point(x,xval)
 % Outputs:
 % - point: same size of xval
 % - M: error. M = x(point) - xval.
+
+
 point = zeros(size(xval));
 M = zeros(size(xval));
 xval(xval == Inf) = max(x);
 xval(xval == -Inf) = min(x);
-for k = 1:length(xval)
+for k = 1:numel(xval)
     [M(k), point(k)] = min(abs(x-xval(k)));   
 end
