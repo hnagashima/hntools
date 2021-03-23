@@ -4,6 +4,7 @@ function cmenu(varargin)
 % cmenu on      % adds cmenu to the figure.
 % cmenu off     % removes cmenu
 % cmenu default % set cmenu as a default figure create function.
+% cmenu enable  % set cmenu as a default figure create function.
 % cmenu disable % remove cmenu from a default figure create function.
 % cmenu(src, event)  % called from Figure create function. 
 %       Same as cmenu on
@@ -29,6 +30,10 @@ switch nargin
         option = 'on';
     case 1
         if strcmp(varargin{1},'default')
+            set(0, 'defaultFigureCreateFcn',@cmenu);
+            return;
+        end
+        if strcmp(varargin{1},'enable')
             set(0, 'defaultFigureCreateFcn',@cmenu);
             return;
         end
