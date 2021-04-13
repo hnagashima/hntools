@@ -31,14 +31,17 @@ switch nargin
     case 1
         if strcmp(varargin{1},'default')
             set(0, 'defaultFigureCreateFcn',@cmenu);
+            disp('Default menu has set to be cmenu');
             return;
         end
         if strcmp(varargin{1},'enable')
             set(0, 'defaultFigureCreateFcn',@cmenu);
+            disp('Default menu has set to be cmenu');
             return;
         end
         if strcmp(varargin{1}, 'disable')
             set(0, 'defaultFigureCreateFcn',[]);
+            disp('Cmenu has removed from the default figure menu.');
             return;
         end
         src = gcf;
