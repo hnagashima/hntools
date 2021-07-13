@@ -1,5 +1,5 @@
 function [g,MagP] = g09Spin(filename)
-% Import magnetic parameters from Log file of single-point
+% Import magnetic parameters from Log file of single point
 % calculation  of gaussian 09 with nmr option.
 % %
 % - filename: File path of LOG file.
@@ -67,8 +67,8 @@ for k = 1:numel(SpinDipoleCouplings1)
     data1 = textscan(SpinDipoleCouplings1{k},'%d %s %f %f %f'); % 3XX, 3YY, 3ZZ
     data2 = textscan(SpinDipoleCouplings2{k},'%d %s %f %f %f'); % XY XZ YZ
     Adip_au = [data1{3} data2{3} data2{4};
-        data2{3} data1{4} data2{5};
-        data2{4} data2{5} data1{5}];
+               data2{3} data1{4} data2{5};
+               data2{4} data2{5} data1{5}];
     MagP(k).Adip = au2Mhz(Adip_au);
 end
 
