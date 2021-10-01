@@ -84,6 +84,8 @@ for k = 1:numel(tmp)
 end
 g = cell2mat(tmp2);
 
+
+
 end
 
 % Ordering by atoms. 1H. Prefer 14N and 1H, then put C, and others.
