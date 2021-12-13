@@ -1,8 +1,8 @@
 function checkParams(A,B,varargin)
 %
 % checkParams compare variables in A and B and display which variables do
-% not match. It is useful for debugging if there is a collect program and
-% incorrect program.
+% not match. It is useful for debugging if there is a correct program and
+% an incorrect program.
 %
 % Usage:
 %   checkParams(A, B)
@@ -10,7 +10,7 @@ function checkParams(A,B,varargin)
 %
 % Inputs:
 %   - A : Filename of .mat which includes the variables. This file can be
-%       created by a "save" function by save('A.mat');
+%       created by a "save" function by save('A.mat') at the end of program;
 %   - B : Filename of .mat which includes the variables of another program.
 %   - structA, structB : Structures with fields.
 %
