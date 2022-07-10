@@ -26,7 +26,11 @@ function [freq,FT] = myFFT(x,varargin)
 % varargin{5} : treatment
 
 narginchk(2,4);
-Fs = 1/(x(1) - x(2))/2; % Sampling frequency
+if numel(x) <= 1
+    error('Number of elements of x is not enough');
+end
+
+Fs = abs(1/(x(2) - x(1))/2); % Sampling frequency
 
 % Determine number of zero-padding
 if nargin > 2 && ~isempty(varargin{2})
@@ -37,7 +41,7 @@ end
 
 % In the default, zero frequency is at the center by fftshift.
 % shiftopt specifis the dimension of fftshift.
-shiftopt = 1;% default value
+shiftopt = [];% default value
 if nargin >= 4 && isempty(varargin{3} == 0)
     shiftopt = varargin{3};
 end
@@ -58,6 +62,12 @@ freq=(linspace(-1,1,NFFT+1)*Fs).';
 freq(end) = [];
 
 % Fourier transformation.
-FT = fftshift(fft(varargin{:}),shiftopt);
+if isempty(shiftopt)
+    FT = fftshift(fft(varargin{:}));
+else
+    FT = fftshift(fft(varargin{:}), shiftopt);
+end
+
+
 
 
