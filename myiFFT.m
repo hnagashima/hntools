@@ -6,6 +6,9 @@ function [time, td] = myiFFT(x,y, varargin)
 %
 % - x
 % time 
+% 
+warning('Time is not calculated exactly.');
+
 narginchk(2,4);
 
 % dt = 1/Fs;
@@ -21,7 +24,6 @@ end
 % fftshiftをする.
 if numel(varargin) >= 2
     % second term is DIM
-
     y2 = ifftshift(y, varargin{2});
 else
     y2 = ifftshift(y);
@@ -30,5 +32,5 @@ end
 
 td = ifft(y2, varargin{:});
 
-dt = abs(1/(x(2) - x(1)));
+dt = abs(1/(x(2) - x(1))); % 多分このあたりに補正が必要
 time = (0 : (NFFT-1) ) * dt;
