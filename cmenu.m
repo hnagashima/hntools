@@ -51,6 +51,14 @@ switch nargin
         src = varargin{1};
         event = varargin{2};
         option = 'on';
+    otherwise
+        % It can be called when the cmenu is called as a default figure
+        % create function with other programs. third input will be another
+        % functions.
+        src = varargin{1};
+        event = varargin{2};
+        option = 'on';
+
 end
 
 % option must be on or off.
@@ -60,7 +68,7 @@ if ~ismember(option,{'on','off'})
 end
 
 
-fig = src; % F = figure; gcf
+fig = src;% F = figure; gcf
 % Check if figure is numberless ( = appdesigner or some GUI apps)
 if isempty(fig.Number)
     return;
@@ -88,10 +96,11 @@ end
 
 mh = uimenu(fig,LabelName ,'Custom');
 mh.HandleVisibility = 'on'; % undeletable object.
-
+%---
 % add save2pdf menu
 save2pdf_menu(src, event, mh);
 
+%---
 % add Figure Scale menu
 eh3 = uimenu(mh,LabelName,'FigureScale');
 lists = FigureScale;
@@ -104,10 +113,28 @@ end
         FigureScale(mh.Parent,src.Text);
     end
 
-
+%---
 % add label menu
 label.addLabelMenu(src,event, mh);
 
+
+%---
+% add program report and dependency checker
+st = dbstack('-completenames'); % List of calling programs
+st = flipud(st);
+eh4 = uimenu(mh, LabelName, 'Calling Programs');
+eh4_files = cell(1, numel(st) + 1);
+for k = 1:numel(st)  
+    [~,f_name] = fileparts(st(k).file); % only the file name , not path
+    if strcmp(f_name , 'cmenu') == 0 % cmenu will not be listed.
+        eh4_files{k} = uimenu(eh4, LabelName,  f_name );
+        eh4_files{k}.MenuSelectedFcn=@(~,~) dependfigure_cmenu(st(k).file,eh4_files{k});
+        
+    end
+end
+
+
+%---
 % add Ezyfit Function
 memo_dFigCreateFcn = get(0,'defaultFigureCreateFcn'); % remember default figure create fcn.
 efmenu;
@@ -116,6 +143,7 @@ set(0,'defaultFigureCreateFcn',memo_dFigCreateFcn);% Restore default figure crea
 % remove this function from current Figure.
 fig.CreateFcn = [];
 
+%---
 
 
 % 例
@@ -138,6 +166,7 @@ fig.CreateFcn = [];
 end
 
 
+
 function pname = LabelName
 % Return 'text' or 'label' depending on MATLAB version
 V = version('-release');
@@ -147,4 +176,32 @@ else
     pname = 'text';
 end
 
+end
+
+
+%% Dependency list
+function dependfigure_cmenu(filenamecell, eh4_files)
+% This function tries to set dependency of the figures
+% The files and products will be copied to the clipboard.
+%
+%dependfigure_cmenu(filenamecell, eh4_files)
+% filename cell : プログラムの名前, セル配列か文字列
+% eh4_files     : メニューのハンドル。実行結果をそこに生成するようなプログラムを想定した
+
+disp('Generating the dependencies...');
+
+filenamecell = forcecell(filenamecell);
+
+% check dependencies.
+[fList,pList] = matlab.codetools.requiredFilesAndProducts(filenamecell{1});
+fList = reshape(fList,[],1);
+pList = reshape(pList,[],1);
+
+productList = {pList.Name};
+productList = reshape(productList,[],1);
+ 
+% copy to clipboard
+clipboard('copy', strjoin([fList; productList], newline));
+
+disp('Dependency Lists were copied to your clipboard');
 end
