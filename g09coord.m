@@ -20,6 +20,15 @@ function [P] = g09coord(filename)
 % C : data cell.
 C = readcell(filename); % Read to cell. Each cell contains 1 word.
 
+% Some files results cell including date-time data, not a text,
+% This problem cause an error at strfind in the containind function.
+non_char_ind = cellfun(@ischar, C);
+for k = 1:numel(non_char_ind)
+    if ~non_char_ind(k)
+        C{k} = '';
+    end
+end
+
 [LI1] = containind(C, 'Symbolic Z-matrix:');
 [LI2_1] = containind(C, 'Standard basis:');
 [LI2_2] = containind(C, 'Input orientation:');
@@ -27,7 +36,8 @@ temp = [LI2_1 ; LI2_2];
 LI2 = min(temp);
 % Imports Coordinates.
 coord = C((LI1+2) : (LI2-1),1);
-P(1:numel(coord)) = struct('X',0,'Y',0,'Z',0,'R',[0 0 0],'SpinDensity',0,'Atom','');
+P(1:numel(coord)) = struct(...
+    'X',0,'Y',0,'Z',0,'R',[0 0 0],'SpinDensity',0,'Atom','');
 for k = 1:numel(coord)
     data0 = textscan(coord{k},'%s %f %f %f');
     P(k).X = data0{2}; P(k).Y = data0{3}; P(k).Z = data0{4};
@@ -67,8 +77,8 @@ end
 % Sub functions
 
 function [LI,CI, ind] = containind(cellArray, pattern)
-% This function searches a pattern in cell array and return the index which is
-% contataining the pattern
+% This function searches a pattern in cell array and return the index which
+% is contataining the pattern
 % LI : Line index 
 % CI : Column index
 % ind : index

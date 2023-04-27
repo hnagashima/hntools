@@ -81,6 +81,7 @@ end
 
 %% menuˆ—
 
+createFigureOutsideIDE(varargin{:});
 % clear menu at first.
 delete(findobj(fig,'Label','Custom')); % clear old menu object.
 delete(findobj(fig,'Label','EzyFit')); % clear menu object.
