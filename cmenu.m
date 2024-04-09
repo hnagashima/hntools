@@ -80,7 +80,7 @@ end
 
 
 %% menuˆ—
-
+% Set figure positions.
 createFigureOutsideIDE(varargin{:});
 % clear menu at first.
 delete(findobj(fig,'Label','Custom')); % clear old menu object.
@@ -99,7 +99,14 @@ mh = uimenu(fig,LabelName ,'Custom');
 mh.HandleVisibility = 'on'; % undeletable object.
 %---
 % add save2pdf menu
-save2pdf_menu(src, event, mh);
+v = version('-release'); % get Matlab version
+save2pdf_menu(src, event, mh); % old version may need ghost script and save2pdf
+% if str2double(v(1:4)) < 2020
+% 
+% else %  export graphics is available at matlab2020a and later.    
+%     exportgraphics_menu(src, event, mh);% add exportgraphics_menu
+% end
+
 
 %---
 % add Figure Scale menu
