@@ -1,266 +1,155 @@
 function cmenu(varargin)
-% Add custom menu to the figure menubar.
-% cmenu         % adds cmenu to the figure.
-% cmenu on      % adds cmenu to the figure.
-% cmenu off     % removes cmenu
-% cmenu default % set cmenu as a default figure create function.
-% cmenu enable  % set cmenu as a default figure create function.
-% cmenu disable % remove cmenu from a default figure create function.
-% cmenu(src, event)  % called from Figure create function. 
-%       Same as cmenu on
-% 
-% 
-% cmenu off removes custom menu from the current figure.
-% cmenu on adds custom menu to the figure.
-% 
-% cmenu requires ezyfit.
-% 
-% 
-% Run following script at startup.m to setup cmenu as a default.
-%   cmenu default
-%  set(0, 'defaultFigureCreateFcn',@(src, event) cmenu('on',src,event));
-% This function is called when figure is created.
-% 
-
-% Parse inputs
-switch nargin 
-    case 0
-        src = gcf;
-        event = [];
-        option = 'on';
-    case 1
-        if strcmp(varargin{1},'default')
-            set(0, 'defaultFigureCreateFcn',@cmenu);
-            disp('Default menu has set to be cmenu');
-            return;
-        end
-        if strcmp(varargin{1},'enable')
-            set(0, 'defaultFigureCreateFcn',@cmenu);
-            disp('Default menu has set to be cmenu');
-            return;
-        end
-        if strcmp(varargin{1}, 'disable')
-            set(0, 'defaultFigureCreateFcn',[]);
-            disp('Cmenu has removed from the default figure menu.');
-            return;
-        end
-        src = gcf;
-        event = [];
-        option = varargin{1};
-    case 2
-        src = varargin{1};
-        event = varargin{2};
-        option = 'on';
-    otherwise
-        % It can be called when the cmenu is called as a default figure
-        % create function with other programs. third input will be another
-        % functions.
-        src = varargin{1};
-        event = varargin{2};
-        option = 'on';
-
-end
-
-% option must be on or off.
-
-if ~ismember(option,{'on','off'}) 
-        error('Option is ''on'' , ''off'' , ''default'' or ''disable'' ');
-end
-
-
-fig = src;% F = figure; gcf
-% Check if figure is numberless ( = appdesigner or some GUI apps)
-if isempty(fig.Number)
-    return;
-end
-if strcmp(fig.MenuBar,'figure') == 0
-    return;
-end
-
-
-
-%% menu処理
-% Set figure positions.
-createFigureOutsideIDE(varargin{:});
-% clear menu at first.
-delete(findobj(fig,'Label','Custom')); % clear old menu object.
-delete(findobj(fig,'Label','EzyFit')); % clear menu object.
-
-switch option
-    case 'off'
-        return;
-    case 'on'
-
-end
-
-
-
-mh = uimenu(fig,LabelName ,'Custom');
-mh.HandleVisibility = 'on'; % undeletable object.
-%---
-% add save2pdf menu
-v = version('-release'); % get Matlab version
-save2pdf_menu(src, event, mh); % old version may need ghost script and save2pdf
-% if str2double(v(1:4)) < 2020
-% 
-% else %  export graphics is available at matlab2020a and later.    
-%     exportgraphics_menu(src, event, mh);% add exportgraphics_menu
-% end
-
-
-%---
-% add Figure Scale menu
-eh3 = uimenu(mh,LabelName,'FigureScale');
-lists = FigureScale;
-c_eh3{1,size(lists,1)} = [];
-for k = 1:size(lists,1)
-    c_eh3{k} = uimenu(eh3,LabelName,lists{k,1});
-    c_eh3{k}.Callback = @setFigureScale;
-end
-    function setFigureScale(src,~)
-        FigureScale(mh.Parent,src.Text);
-    end
-
-%---
-% add label menu
-label.addLabelMenu(src,event, mh);
-
-% add Figure size fix menu.
-%eh4 = uimenu(mh, LabelName, 'Command for fix Figure Size');
-
-
-%---
-% add program report and dependency checker
-st = dbstack('-completenames'); % List of calling programs
-st = flipud(st);
-eh5 = uimenu(mh, LabelName, 'Calling Programs');
-eh5_files = cell(1, numel(st) + 1);
-for k = 1:numel(st)  
-    [~,f_name] = fileparts(st(k).file); % only the file name , not path
-    if strcmp(f_name , 'cmenu') == 0 % cmenu will not be listed.
-        eh5_files{k} = uimenu(eh5, LabelName,  f_name );
-        eh5_files{k}.MenuSelectedFcn=@(~,~) dependfigure_cmenu(st(k).file,eh5_files{k});
-        
-    end
-end
-
-
-%---
-% add Ezyfit Function
-memo_dFigCreateFcn = get(0,'defaultFigureCreateFcn'); % remember default figure create fcn.
-efmenu;
-set(0,'defaultFigureCreateFcn',memo_dFigCreateFcn);% Restore default figure create fcn.
-
-% remove this function from current Figure.
-fig.CreateFcn = [];
-
-%---
-
-
-% 例
-% eh0 = uimenu(mh,'text','test');
-% fun0 = @(src,event,varargin) disp('test');
-% eh0.MenuSelectedFcn = fun0;
-
-% src event is reserved inputs.
-% You need to specify as a 1st and 2nd inputs, 
-% even though you don't need src and event.
-
-% PDF export functions
-% eh1 = uimenu(mh,'text','Export to PDF');
-% fun = @(src,event,varargin) save2pdf(mh.Parent);
-% eh1.MenuSelectedFcn = fun;
-% 
-% eh2 = uimenu(mh, 'text', 'Export to transparent PDF');
-% fun = @(src,event, varargin) save2pdf_transparent(mh.Parent);
-% eh2.MenuSelectedFcn = fun;
-end
-
-
-
-function pname = LabelName
-% Return 'text' or 'label' depending on MATLAB version
-V = version('-release');
-if str2double(V(1:4)) < 2018        
-    pname = 'label';
-else
-    pname = 'text';
-end
-
-end
-
-%% Figure Size Fix.
-
-
-
-
-%% Dependency list
-function dependfigure_cmenu(filenamecell, eh4_files)
-% This function tries to set dependency of the figures
-% The files and products will be copied to the clipboard.
+% CMENU  Add a custom menu to MATLAB figure windows
 %
-%dependfigure_cmenu(filenamecell, eh4_files)
-% filename cell : プログラムの名前, セル配列か文字列
-% eh4_files     : メニューのハンドル。実行結果をそこに生成するようなプログラムを想定した
+% 【目的】
+%   研究でよく使う処理（図の保存・スケーリング・依存関係チェックなど）を
+%   Figure のメニューバーに自動で追加するための関数。
+%   EzyFit などの外部ツールも統合して、解析用 Figure の操作を便利にする。
+%
+% 【使い方】
+%   cmenu              % カレント Figure に Custom メニューを追加
+%   cmenu on           % 同上（明示的に on）
+%   cmenu off          % カレント Figure から Custom メニューを削除
+%   cmenu default      % 全ての Figure 作成時に自動で cmenu を追加（古い方式）
+%   cmenu enable       % 上と同じ（alias）
+%   cmenu disable      % 自動追加をやめるf=gcf
+%   cmenu(src,event)   % Figure 作成時コールバックから呼ばれる形式
+%
+% 【互換性】
+%   R2014b - R2025 で動作するようにバージョン分岐を入れている。
+%   - R2018 未満  : uimenu は 'Label' プロパティを使用
+%   - R2018 以降 : uimenu は 'Text' プロパティを使用
+%   - R2023 未満 : set(0,'defaultFigureCreateFcn',@cmenu) を使用
+%   - R2023 以降 : groot (root graphics object) にリスナーを仕込む
+%   - R2025 以降 : MenuBar プロパティが 'on' / 'off' で管理される
+%
+% 【設計方針】
+%   - まず既存の Custom/EzyFit メニューを削除してから新規作成
+%   - 個別の機能はサブルーチンや別ファイル (save2pdf_menu, FigureScale, label.addLabelMenu, efmenu) に分離
+%   - 呼び出し元プログラムの依存関係を簡単に確認できるように "Calling Programs" メニューを用意
+%   - defaultFigureCreateFcn を壊さないように一時保存＆復元
+%
 
-disp('Generating the dependencies...');
-
-filenamecell = forcecell(filenamecell);
-
-% check dependencies.
-[fList,pList] = matlab.codetools.requiredFilesAndProducts(filenamecell{1});
-fList = reshape(fList,[],1);
-pList = reshape(pList,[],1);
-
-productList = {pList.Name};
-productList = reshape(productList,[],1);
-
-% #copy to clipboard (Version 1, Full file lists.)
-% clipboard('copy', strjoin([fList; productList], newline));
-% disp('Dependency Lists were copied to your clipboard');
-
-% #TidyUp
-dnames = cell(numel(fList),3); % dependency file names.
-% separate to directory
-for k = 1:numel(fList)
-   [dnames{k,1} , fn,ext] = fileparts(fList{k});
-   dnames{k,2} = [sprintf('\t'), fn,ext];
+%% ---- Input Parse ----
+switch nargin
+    case 0
+        % cmenu を引数なしで呼ぶと現在の Figure に Custom メニューを追加
+        src = gcf; event = []; option = 'on';
+    case 1
+        opt = varargin{1};
+        switch lower(opt)
+            case {'default','enable'}
+                % 以降の Figure 作成時に自動的に cmenu を適用
+                if versionYear < 2023
+                    % 古い方式: root の defaultFigureCreateFcn を上書き
+                    set(0,'defaultFigureCreateFcn',@cmenu);
+                else
+                    % 新しい方式: groot にリスナーを追加
+                    addlistener(groot,'ObjectChildAdded', ...
+                        @(src,event) cmenu('on',event.Child));
+                end
+                disp('Default menu has set to cmenu');
+                return;
+            case 'disable'
+                % 自動追加を解除
+                if versionYear < 2023
+                    set(0,'defaultFigureCreateFcn',[]);
+                else
+                    delete(findall(groot,'Type','listener')); % 全リスナー削除（注意）
+                end
+                disp('Cmenu removed from default');
+                return;
+            otherwise
+                % cmenu('on') / cmenu('off') の場合
+                src = gcf; event = []; option = opt;
+        end
+    case 2
+        % Figure の CreateFcn から呼ばれるときの形式
+        src = varargin{1}; event = varargin{2}; option = 'on';
+    otherwise
+        src = varargin{1}; event = varargin{2}; option = 'on';
 end
-[~, ia] = unique(dnames(:,1),'stable'); % Remove unique folders
-for k = 1:numel(ia)
-    dnames{ia(k),3} = dnames{ia(k),1};
+
+if ~ismember(option,{'on','off'})
+    error('Option must be ''on'' or ''off''.');
 end
-%Re-sorting
-tx = reshape(dnames(:,[3 2]).',[],1);
-tx(cellfun(@isempty,tx)) = [];
 
-% Copy to clipboard (version 2, partial file lists)
-clipboard('copy', strjoin([tx; productList], newline));
+fig = src;
+if ~isgraphics(fig,'figure'), return; end
 
-% Save to the file.
-%fp = fopen(['dependenciesfilenamecell{1});
-[filedir, file, ~] = fileparts(filenamecell{1});
-ext = '_dependence.txt'; k = 1; sw = 0;
-while sw == 0
-    fn2 = fullfile(filedir, [file ext]);
-    if exist(fn2, 'file') % when the file exists.
-        % File exists.
-        ext = ['_dependence' num2str(k) '.txt'];
-        k = k + 1;
+%% ---- MenuBar 判定 ----
+if versionYear < 2025
+    % 古い環境では 'MenuBar' が 'figure'
+    if ~strcmp(fig.MenuBar,'figure'), return; end
+else
+    % 新しい環境では 'on' / 'off'
+    if ~strcmp(fig.MenuBar,'on'), return; end
+end
+
+%% ---- Clear Old Menus ----
+% すでに存在する Custom/EzyFit メニューを削除してから再作成
+delete(findobj(fig,'Label','Custom')); % R2018以前
+delete(findobj(fig,'Label','EzyFit'));
+delete(findobj(fig,'Text','Custom'));  % R2018以降
+delete(findobj(fig,'Text','EzyFit'));
+
+if strcmp(option,'off'), return; end
+
+%% ---- Create Main Menu ----
+if versionYear < 2018
+    mh = uimenu(fig,'Label','Custom');
+else
+    mh = uimenu(fig,'Text','Custom');
+end
+mh.HandleVisibility = 'on'; % ユーザーに消されにくくする設定
+
+%% ---- Submenus ----
+
+% --- Save2PDF 機能 ---
+%  Figure を PDF に保存するメニューを追加
+save2pdf_menu(src,event,mh);
+
+% --- Figure Scale 機能 ---
+%  あらかじめ定義したスケール（拡大率など）を Figure に適用
+eh3 = uimenu(mh,'Text','FigureScale');
+lists = FigureScale;
+for k = 1:size(lists,1)
+    if versionYear < 2018
+        eh = uimenu(eh3,'Label',lists{k,1});
     else
-        % You can use this file.
-        sw = 1;
+        eh = uimenu(eh3,'Text',lists{k,1});
+    end
+    eh.Callback = @(src,evt) FigureScale(mh.Parent,src.Text);
+end
+
+% --- Label 機能 ---
+%  グラフに注釈を追加するラベル機能（外部 label.m が必要）
+label.addLabelMenu(src,event,mh);
+
+% --- Dependency Checker ---
+%  呼び出し履歴から依存ファイルをリスト化し、クリップボードやファイルに保存
+st = flipud(dbstack('-completenames'));
+eh5 = uimenu(mh,'Text','Calling Programs');
+for k = 1:numel(st)
+    [~,fname] = fileparts(st(k).file);
+    if ~strcmp(fname,'cmenu')
+        uimenu(eh5,'Text',fname, ...
+            'MenuSelectedFcn',@(a,b) dependfigure_cmenu(st(k).file,[]));
     end
 end
-fp = fopen(fn2,'w');
-if fp == -1
-    error('Error in creating file');
-else
-    % Write the string to the file.
-   fprintf(fp, '%s', strjoin([tx; productList], newline));
-   fclose(fp);
-   disp('Dependency Lists were succesfully saved at :');
-   disp(fn2);
-end
 
+% --- Ezyfit メニュー ---
+%  EzyFit ツールボックスの機能を追加
+memo = get(0,'defaultFigureCreateFcn');
+efmenu;
+set(0,'defaultFigureCreateFcn',memo); % 元に戻す
+
+end % cmenu main
+
+
+%% ---- Utility: version year ----
+function y = versionYear
+% MATLAB リリース文字列 (例: '2025a') から西暦を取得
+V = version('-release'); 
+y = str2double(V(1:4));
 end
